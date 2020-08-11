@@ -61,6 +61,7 @@ console.log(chalk.cyan(`vite v${require('../../package.json').version}`))
 
   const envMode = mode || m || defaultMode
   const options = await resolveOptions(envMode)
+
   if (!options.command || options.command === 'serve') {
     runServe(options)
   } else if (options.command === 'build') {
@@ -127,6 +128,7 @@ async function resolveOptions(mode: string) {
 }
 
 async function runServe(options: UserConfig) {
+  // TODO 1.进入创建服务
   const server = require('./server').createServer(options)
 
   let port = options.port || 3000
