@@ -70,16 +70,17 @@ export const moduleRewritePlugin: ServerPlugin = ({
       // skip internal client
       publicPath !== clientPublicPath &&
       // need to rewrite for <script>\<template> part in vue files
-      !((ctx.path.endsWith('.vue') || ctx.vue) && ctx.query.type === 'style')
+      !((ctx.path.endsWith('.vue') || ctx.vue) && ctx.query.type === 'style') // 重写含<scipt><template>的vue组件，同时要排除style类型文件
     ) {
       const content = await readBody(ctx.body)
       const cacheKey = publicPath + content
       const isHmrRequest = !!ctx.query.t
       if (!isHmrRequest && rewriteCache.has(cacheKey)) {
+        // 若不是HMR同时缓存有效就直接用缓存
         debug(`(cached) ${ctx.url}`)
         ctx.body = rewriteCache.get(cacheKey)
       } else {
-        await initLexer
+        await initLexer //  ESM词法分析器 初始化，后续可以用于获得es module import 和 export 的 模块名 https://github.com/guybedford/es-module-lexer
         // dynamic import may contain extension-less path,
         // (.e.g import(runtimePathString))
         // so we need to normalize importer to ensure it contains extension
@@ -87,6 +88,7 @@ export const moduleRewritePlugin: ServerPlugin = ({
         // on the other hand, static import is guaranteed to have extension
         // because they must all have gone through module rewrite.
         const importer = removeUnRelatedHmrQuery(
+          // TODO Q:这里importer是什么。。明天打断点看看
           resolver.normalizePublicPath(ctx.url)
         )
         ctx.body = rewriteImports(

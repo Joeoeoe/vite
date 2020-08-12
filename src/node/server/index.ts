@@ -64,7 +64,7 @@ export function createServer(config: ServerConfig): Server {
   const watcher = chokidar.watch(root, {
     ignored: [/\bnode_modules\b/, /\b\.git\b/]
   }) as HMRWatcher // 监听文件改变，用于HMR
-  const resolver = createResolver(root, resolvers, alias) // TODO Q1：有点不清楚什么意思，估计是解析文件？
+  const resolver = createResolver(root, resolvers, alias) // TODO Q1：有点不清楚什么意思，估计是解析文件用？
 
   // context表示ServerPluginContext，不是koa的context
   const context: ServerPluginContext = {
@@ -84,8 +84,8 @@ export function createServer(config: ServerConfig): Server {
     // TODO Q2：这是啥意思？
     // 解决：为ctx绑定读取文件方法，如果缓存命中则返回缓存，否则读取文件、设置缓存
     Object.assign(ctx, context)
-    ctx.read = cachedRead.bind(null, ctx) //ctx为方法的预设参数，ctx.read方法用于后续读取文件，如果有缓存则返回缓存
-    return next() //async/await另一种写法，这里这样的目的是不需要回到此中间件
+    ctx.read = cachedRead.bind(null, ctx) //ctx为方法的预设参数，ctx.read方法用于后续读取对应文件，是个util方法，如果有缓存则返回缓存
+    return next() //async/await另一种写法，这样写是因为不需要回到此中间件
   })
 
   // TODO Q3： 猜测是与resolver搭配使用？
@@ -93,8 +93,8 @@ export function createServer(config: ServerConfig): Server {
   const resolvedPlugins = [
     // rewrite and source map plugins take highest priority and should be run
     // after all other middlewares have finished
-    sourceMapPlugin,
-    moduleRewritePlugin,
+    sourceMapPlugin, // sourceMap plugin，可在中间件后添加soure map
+    moduleRewritePlugin, // 对所有中间件产生的js进行处理，使得不需要管原始文件的扩展名
     htmlRewritePlugin,
     // user plugins
     ...(Array.isArray(configureServer) ? configureServer : [configureServer]),
