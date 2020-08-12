@@ -29,13 +29,14 @@ export async function cachedRead(
   ctx: Context | null,
   file: string
 ): Promise<Buffer> {
-  const lastModified = fs.statSync(file).mtimeMs
-  const cached = fsReadCache.get(file)
+  const lastModified = fs.statSync(file).mtimeMs // 文件最后一次修改时间
+  const cached = fsReadCache.get(file) // 文件缓存
   if (ctx) {
     ctx.set('Cache-Control', 'no-cache')
     ctx.type = mime.lookup(path.extname(file)) || 'application/octet-stream'
   }
   if (cached && cached.lastModified === lastModified) {
+    // 缓存存在且未过期
     if (ctx) {
       // a private marker in case the user ticks "disable cache" during dev
       ctx.__notModified = true
@@ -45,12 +46,12 @@ export async function cachedRead(
         ctx.status = 304
       }
       seenUrls.add(ctx.url)
-      ctx.body = cached.content
+      ctx.body = cached.content // 若有ctx，则将内容置于body之中（因为这是个utils方法，多个地方用到）
     }
-    return cached.content
+    return cached.content //返回对应内容
   }
   // #395 some file is an binary file, eg. font
-  const content = await fs.readFile(file)
+  const content = await fs.readFile(file) //读取文件并后续设置缓存
   const etag = getETag(content)
   fsReadCache.set(file, {
     content,
@@ -58,6 +59,7 @@ export async function cachedRead(
     lastModified
   })
   if (ctx) {
+    //有ctx情况
     ctx.etag = etag
     ctx.lastModified = new Date(lastModified)
     ctx.body = content
@@ -67,6 +69,7 @@ export async function cachedRead(
     const { root, watcher } = ctx
     watchFileIfOutOfRoot(watcher, root, file)
   }
+  // 无ctx则直接返回
   return content
 }
 

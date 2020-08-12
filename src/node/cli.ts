@@ -60,7 +60,7 @@ console.log(chalk.cyan(`vite v${require('../../package.json').version}`))
   }
 
   const envMode = mode || m || defaultMode
-  const options = await resolveOptions(envMode)
+  const options = await resolveOptions(envMode) //获取命令行参数
 
   if (!options.command || options.command === 'serve') {
     runServe(options)
@@ -128,15 +128,19 @@ async function resolveOptions(mode: string) {
 }
 
 async function runServe(options: UserConfig) {
-  // TODO 1.进入创建服务
+  // TODO 1.创建服务，使用node http模块监听，使用Koa作为listener
   const server = require('./server').createServer(options)
 
+  // TODO 2.各种配置
+  // 端口、主机、协议配置
   let port = options.port || 3000
   let hostname = options.hostname || 'localhost'
   const protocol = options.https ? 'https' : 'http'
 
+  // 监听错误
   server.on('error', (e: Error & { code?: string }) => {
     if (e.code === 'EADDRINUSE') {
+      // 端口占用，自动+1再监听
       console.log(`Port ${port} is in use, trying another one...`)
       setTimeout(() => {
         server.close()
@@ -148,11 +152,14 @@ async function runServe(options: UserConfig) {
     }
   })
 
+  // TODO 3.开启服务与接口显示
+  // 开启服务
   server.listen(port, () => {
     console.log()
     console.log(`  Dev server running at:`)
     const interfaces = os.networkInterfaces()
     Object.keys(interfaces).forEach((key) => {
+      //显示服务接口
       ;(interfaces[key] || [])
         .filter((details) => details.family === 'IPv4')
         .map((detail) => {

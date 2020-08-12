@@ -57,15 +57,16 @@ export function createServer(config: ServerConfig): Server {
     vueCustomBlockTransforms = {},
     optimizeDeps = {},
     enableEsbuild = true
-  } = config
+  } = config // 相关配置
 
   const app = new Koa<State, Context>()
-  const server = resolveServer(config, app.callback())
+  const server = resolveServer(config, app.callback()) //创建http、https或http2服务，app.callback()返回app的回调函数
   const watcher = chokidar.watch(root, {
     ignored: [/\bnode_modules\b/, /\b\.git\b/]
-  }) as HMRWatcher
-  const resolver = createResolver(root, resolvers, alias)
+  }) as HMRWatcher // 监听文件改变，用于HMR
+  const resolver = createResolver(root, resolvers, alias) // TODO Q1：有点不清楚什么意思，估计是解析文件？
 
+  // context表示ServerPluginContext，不是koa的context
   const context: ServerPluginContext = {
     root,
     app,
@@ -80,12 +81,15 @@ export function createServer(config: ServerConfig): Server {
 
   // attach server context to koa context
   app.use((ctx, next) => {
-    // TODO Q：这是啥意思？
+    // TODO Q2：这是啥意思？
+    // 解决：为ctx绑定读取文件方法，如果缓存命中则返回缓存，否则读取文件、设置缓存
     Object.assign(ctx, context)
-    ctx.read = cachedRead.bind(null, ctx)
-    return next()
+    ctx.read = cachedRead.bind(null, ctx) //ctx为方法的预设参数，ctx.read方法用于后续读取文件，如果有缓存则返回缓存
+    return next() //async/await另一种写法，这里这样的目的是不需要回到此中间件
   })
 
+  // TODO Q3： 猜测是与resolver搭配使用？
+  // 每一个plugin均为一个函数可以传入context，context包含app，所以plugin函数中能添加监听
   const resolvedPlugins = [
     // rewrite and source map plugins take highest priority and should be run
     // after all other middlewares have finished
@@ -119,6 +123,7 @@ export function createServer(config: ServerConfig): Server {
   ]
   resolvedPlugins.forEach((m) => m && m(context))
 
+  // TODO Q4:listen扩展？listen函数不是要传入端口吗？看看http api
   const listen = server.listen.bind(server)
   server.listen = (async (port: number, ...args: any[]) => {
     if (optimizeDeps.auto !== false) {
@@ -128,6 +133,7 @@ export function createServer(config: ServerConfig): Server {
     return listen(port, ...args)
   }) as any
 
+  // 返回server服务，后续开启监听
   return server
 }
 
