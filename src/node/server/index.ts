@@ -80,6 +80,7 @@ export function createServer(config: ServerConfig): Server {
 
   // attach server context to koa context
   app.use((ctx, next) => {
+    // TODO Q：这是啥意思？
     Object.assign(ctx, context)
     ctx.read = cachedRead.bind(null, ctx)
     return next()
