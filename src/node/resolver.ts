@@ -363,7 +363,7 @@ export function resolveBareModuleRequest(
 
   let isEntry = false
   const basedir = path.dirname(resolver.requestToFile(importer))
-  const pkgInfo = resolveNodeModule(basedir, id, resolver)
+  const pkgInfo = resolveNodeModule(basedir, id, resolver) // 寻找node_modules中的模块
   if (pkgInfo) {
     if (!pkgInfo.entry) {
       console.error(

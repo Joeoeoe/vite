@@ -126,7 +126,7 @@ export function rewriteImports(
   try {
     let imports: ImportSpecifier[] = []
     try {
-      imports = parseImports(source)[0]
+      imports = parseImports(source)[0] // 解析代码中的import语句。imports数组包含所有import语句
     } catch (e) {
       console.error(
         chalk.yellow(
@@ -142,6 +142,7 @@ export function rewriteImports(
     const hasEnv = source.includes('import.meta.env')
 
     if (imports.length || hasHMR || hasEnv) {
+      // 遍历imports数组中的import语句
       debug(`${importer}: rewriting`)
       const s = new MagicString(source)
       let hasReplaced = false
@@ -150,18 +151,23 @@ export function rewriteImports(
       const currentImportees = new Set<string>()
       importeeMap.set(importer, currentImportees)
 
+      // 遍历此importer文件中import相关语句
       for (let i = 0; i < imports.length; i++) {
-        const { s: start, e: end, d: dynamicIndex } = imports[i]
-        let id = source.substring(start, end)
+        const { s: start, e: end, d: dynamicIndex } = imports[i] //s与e为代码字符串中的下表
+        let id = source.substring(start, end) // 获取import from 后的模块路径
+        console.log(source)
         let hasLiteralDynamicId = false
         if (dynamicIndex >= 0) {
+          // 动态import
           const literalIdMatch = id.match(/^(?:'([^']+)'|"([^"]+)")$/)
+          console.log(literalIdMatch)
           if (literalIdMatch) {
             hasLiteralDynamicId = true
             id = literalIdMatch[1] || literalIdMatch[2]
           }
         }
         if (dynamicIndex === -1 || hasLiteralDynamicId) {
+          // 静态import
           // do not rewrite external imports
           if (isExternalUrl(id)) {
             continue
