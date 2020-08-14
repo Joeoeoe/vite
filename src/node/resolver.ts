@@ -300,6 +300,7 @@ export function createResolver(
       if (importee.startsWith('.')) {
         resolved = path.posix.resolve(path.posix.dirname(importer), importee)
         for (const alias in literalDirAlias) {
+          // 遍历别名
           if (importer.startsWith(alias)) {
             if (!resolved.startsWith(alias)) {
               // resolved path is outside of alias directory, we need to use
@@ -352,7 +353,7 @@ export function resolveBareModuleRequest(
   importer: string,
   resolver: InternalResolver
 ): string {
-  const optimized = resolveOptimizedModule(root, id)
+  const optimized = resolveOptimizedModule(root, id) // 获取优化后的模块，主要是缓存过的模块
   if (optimized) {
     // ensure optimized module requests always ends with `.js` - this is because
     // optimized deps may import one another and in the built bundle their
@@ -362,7 +363,7 @@ export function resolveBareModuleRequest(
   }
 
   let isEntry = false
-  const basedir = path.dirname(resolver.requestToFile(importer))
+  const basedir = path.dirname(resolver.requestToFile(importer)) // 获取项目base路径
   const pkgInfo = resolveNodeModule(basedir, id, resolver) // 寻找node_modules中的模块
   if (pkgInfo) {
     if (!pkgInfo.entry) {
@@ -379,6 +380,7 @@ export function resolveBareModuleRequest(
   }
 
   if (!isEntry) {
+    // 如果对应模块在package.json中找不到入口的话。。。
     const deepMatch = !isEntry && id.match(deepImportRE)
     if (deepMatch) {
       // deep import
@@ -424,6 +426,7 @@ export function resolveBareModuleRequest(
   // check and warn deep imports on optimized modules
   const ext = path.extname(id)
   if (!jsSrcRE.test(ext)) {
+    // 测试是否为js资源扩展
     // append import query for non-js deep imports
     return id + (queryRE.test(id) ? '&import' : '?import')
   } else {
@@ -478,7 +481,7 @@ export function resolveNodeModule(
   let pkgPath
   try {
     // see if the id is a valid package name
-    pkgPath = resolveFrom(root, `${id}/package.json`)
+    pkgPath = resolveFrom(root, `${id}/package.json`) // 获取id对应的package.json路径
   } catch (e) {
     debug(`failed to resolve package.json for ${id}`)
   }
@@ -487,7 +490,7 @@ export function resolveNodeModule(
     // if yes, this is a entry import. resolve entry file
     let pkg
     try {
-      pkg = fs.readJSONSync(pkgPath)
+      pkg = fs.readJSONSync(pkgPath) // 得到对应模块的package.json
     } catch (e) {
       return
     }
@@ -498,6 +501,7 @@ export function resolveNodeModule(
     // Note: this would require @rollup/plugin-node-resolve to support it too
     // or we will have to implement that logic in vite's own resolve plugin.
 
+    // 遍历package.json可能为核心代码路径的字段，获取模块代码的路径
     if (!entryPoint) {
       for (const field of mainFields) {
         if (typeof pkg[field] === 'string') {
@@ -530,8 +534,8 @@ export function resolveNodeModule(
 
     if (!entryFilePath && entryPoint) {
       // #284 some packages specify entry without extension...
-      entryFilePath = path.join(path.dirname(pkgPath), entryPoint!)
-      const postfix = resolveFilePathPostfix(entryFilePath)
+      entryFilePath = path.join(path.dirname(pkgPath), entryPoint!) //获取最终路径
+      const postfix = resolveFilePathPostfix(entryFilePath) // 解决扩展名模糊问题
       if (postfix) {
         entryPoint += postfix
         entryFilePath += postfix
@@ -539,7 +543,7 @@ export function resolveNodeModule(
       entryPoint = path.posix.join(id, entryPoint!)
       // save the resolved file path now so we don't need to do it again in
       // resolveNodeModuleFile()
-      nodeModulesFileMap.set(entryPoint, entryFilePath)
+      nodeModulesFileMap.set(entryPoint, entryFilePath) // 路径缓存，减少检索
     }
 
     const result: NodeModuleInfo = {
@@ -547,7 +551,7 @@ export function resolveNodeModule(
       entryFilePath,
       pkg
     }
-    nodeModulesInfoMap.set(cacheKey, result)
+    nodeModulesInfoMap.set(cacheKey, result) // 文件信息缓存
     return result
   }
 }

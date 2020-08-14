@@ -155,7 +155,6 @@ export function rewriteImports(
       for (let i = 0; i < imports.length; i++) {
         const { s: start, e: end, d: dynamicIndex } = imports[i] //s与e为代码字符串中的下表
         let id = source.substring(start, end) // 获取import from 后的模块路径
-        console.log(source)
         let hasLiteralDynamicId = false
         if (dynamicIndex >= 0) {
           // 动态import
@@ -187,12 +186,12 @@ export function rewriteImports(
               start,
               end,
               hasLiteralDynamicId ? `'${resolved}'` : resolved
-            )
+            ) //overwrite import 语句
             hasReplaced = true
           }
 
           // save the import chain for hmr analysis
-          const importee = cleanUrl(resolved)
+          const importee = cleanUrl(resolved) // 清除#、?后的符号
           if (
             importee !== importer &&
             // no need to track hmr client or module dependencies
@@ -265,10 +264,12 @@ export const resolveImport = (
   id = resolver.alias(id) || id
 
   if (bareImportRE.test(id)) {
+    // 非. / 开头，即node_modules模块
     // directly resolve bare module names to its entry path so that relative
     // imports from it (including source map urls) can work correctly
     id = `/@modules/${resolveBareModuleRequest(root, id, importer, resolver)}`
   } else {
+    // 开发者编写模块
     // 1. relative to absolute
     //    ./foo -> /some/path/foo
     let { pathname, query } = resolver.resolveRelativeRequest(importer, id)
