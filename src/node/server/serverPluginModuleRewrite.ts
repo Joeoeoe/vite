@@ -88,10 +88,10 @@ export const moduleRewritePlugin: ServerPlugin = ({
         // on the other hand, static import is guaranteed to have extension
         // because they must all have gone through module rewrite.
         const importer = removeUnRelatedHmrQuery(
-          // TODO Q:这里importer是什么。。明天打断点看看
           resolver.normalizePublicPath(ctx.url)
-        )
+        ) // importer表示请求文件
         ctx.body = rewriteImports(
+          //重写代码中的 import语句
           root,
           content!,
           importer,
@@ -137,7 +137,6 @@ export function rewriteImports(
         )
       )
     }
-
     const hasHMR = source.includes('import.meta.hot')
     const hasEnv = source.includes('import.meta.env')
 
@@ -154,7 +153,7 @@ export function rewriteImports(
       // 遍历此importer文件中import相关语句
       for (let i = 0; i < imports.length; i++) {
         const { s: start, e: end, d: dynamicIndex } = imports[i] //s与e为代码字符串中的下表
-        let id = source.substring(start, end) // 获取import from 后的模块路径
+        let id = source.substring(start, end) // 获取import from 后的字符串内容
         let hasLiteralDynamicId = false
         if (dynamicIndex >= 0) {
           // 动态import
@@ -178,7 +177,7 @@ export function rewriteImports(
             id,
             resolver,
             timestamp
-          )
+          ) // resolve 模块路径
 
           if (resolved !== id) {
             debug(`    "${id}" --> "${resolved}"`)
@@ -191,6 +190,7 @@ export function rewriteImports(
           }
 
           // save the import chain for hmr analysis
+          // TODO这里不大懂
           const importee = cleanUrl(resolved) // 清除#、?后的符号
           if (
             importee !== importer &&
@@ -263,23 +263,26 @@ export const resolveImport = (
 ): string => {
   id = resolver.alias(id) || id
 
+  // 非. / 开头，即node_modules模块
   if (bareImportRE.test(id)) {
-    // 非. / 开头，即node_modules模块
     // directly resolve bare module names to its entry path so that relative
     // imports from it (including source map urls) can work correctly
     id = `/@modules/${resolveBareModuleRequest(root, id, importer, resolver)}`
   } else {
     // 开发者编写模块
+
     // 1. relative to absolute
     //    ./foo -> /some/path/foo
+    //    举例：./App.vue ——> /App.vue ，原因：服务基于Koa
     let { pathname, query } = resolver.resolveRelativeRequest(importer, id)
 
     // 2. resolve dir index and extensions.
-    pathname = resolver.normalizePublicPath(pathname)
+    pathname = resolver.normalizePublicPath(pathname) // index文件与扩展名
 
     // 3. mark non-src imports
     if (!query && path.extname(pathname) && !jsSrcRE.test(pathname)) {
       query += `?import`
+      debugger // TODO 什么是非src imports？
     }
 
     id = pathname + query
