@@ -91,7 +91,7 @@ export const moduleRewritePlugin: ServerPlugin = ({
           resolver.normalizePublicPath(ctx.url)
         ) // importer表示请求文件
         ctx.body = rewriteImports(
-          //重写代码中的 import语句
+          //重写文件中的 import语句
           root,
           content!,
           importer,
@@ -280,9 +280,11 @@ export const resolveImport = (
     pathname = resolver.normalizePublicPath(pathname) // index文件与扩展名
 
     // 3. mark non-src imports
+    // 用于标记js模块中引入.css等的模块
+    // 比如.vue文件中import 'XX.css'
+    // 与<link> 标签引入区分
     if (!query && path.extname(pathname) && !jsSrcRE.test(pathname)) {
       query += `?import`
-      debugger // TODO 什么是非src imports？
     }
 
     id = pathname + query

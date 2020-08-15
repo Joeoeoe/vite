@@ -58,10 +58,8 @@ console.log(chalk.cyan(`vite v${require('../../package.json').version}`))
     // noop, already logged
     return
   }
-
   const envMode = mode || m || defaultMode
-  const options = await resolveOptions(envMode) //获取命令行参数
-
+  const options = await resolveOptions(envMode)
   if (!options.command || options.command === 'serve') {
     runServe(options)
   } else if (options.command === 'build') {
@@ -140,7 +138,7 @@ async function runServe(options: UserConfig) {
   // 监听错误
   server.on('error', (e: Error & { code?: string }) => {
     if (e.code === 'EADDRINUSE') {
-      // 端口占用，自动+1再监听
+      // 端口占用，自动+1
       console.log(`Port ${port} is in use, trying another one...`)
       setTimeout(() => {
         server.close()

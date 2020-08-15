@@ -171,6 +171,7 @@ export function createResolver(
 
   const resolver: InternalResolver = {
     requestToFile(publicPath) {
+      // 请求——>文件路径 resolve
       if (requestToFileCache.has(publicPath)) {
         return requestToFileCache.get(publicPath)!
       }
@@ -199,6 +200,7 @@ export function createResolver(
     },
 
     fileToRequest(filePath) {
+      // 文件路径——>请求 resolve , 可用于HMR等场景
       if (fileToRequestCache.has(filePath)) {
         return fileToRequestCache.get(filePath)!
       }
@@ -215,6 +217,7 @@ export function createResolver(
      * Given a fuzzy public path, resolve missing extensions and /index.xxx
      */
     normalizePublicPath(publicPath) {
+      // 解决index.xxx与省略扩展名的情况
       if (publicPath === clientPublicPath) {
         return publicPath
       }
@@ -280,6 +283,7 @@ export function createResolver(
     },
 
     alias(id) {
+      // 别名 resolve
       let aliased: string | undefined = literalAlias[id]
       if (aliased) {
         return aliased
@@ -294,6 +298,7 @@ export function createResolver(
     },
 
     resolveRelativeRequest(importer: string, importee: string) {
+      // 相对路径 ——> 绝对路径 resolve 。原因：服务基于Koa web服务器
       const queryMatch = importee.match(queryRE)
       let resolved = importee
 
@@ -327,6 +332,7 @@ export function createResolver(
     },
 
     isPublicRequest(publicPath: string) {
+      // 是否为public下文件
       return resolver
         .requestToFile(publicPath)
         .startsWith(path.resolve(root, 'public'))
