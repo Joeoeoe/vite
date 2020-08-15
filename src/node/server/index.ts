@@ -64,9 +64,9 @@ export function createServer(config: ServerConfig): Server {
   const watcher = chokidar.watch(root, {
     ignored: [/\bnode_modules\b/, /\b\.git\b/]
   }) as HMRWatcher // 监听文件改变，用于HMR
-  const resolver = createResolver(root, resolvers, alias) // TODO Q1：有点不清楚什么意思，估计是解析文件用？
+  const resolver = createResolver(root, resolvers, alias) // 文件解析器，含各种文件相关解析方法
 
-  // context表示ServerPluginContext，不是koa的context
+  // context表示ServerPluginContext，包含各plugin需要使用的方法、属性
   const context: ServerPluginContext = {
     root,
     app,
@@ -81,15 +81,14 @@ export function createServer(config: ServerConfig): Server {
 
   // attach server context to koa context
   app.use((ctx, next) => {
-    // TODO Q2：这是啥意思？
-    // 解决：为ctx绑定读取文件方法，如果缓存命中则返回缓存，否则读取文件、设置缓存
+    // ctx扩展context对象
     Object.assign(ctx, context)
     ctx.read = cachedRead.bind(null, ctx) //ctx为方法的预设参数，ctx.read方法用于后续读取对应文件，是个util方法，如果有缓存则返回缓存
     return next() //async/await另一种写法，这样写是因为不需要回到此中间件
   })
 
-  // TODO Q3： 猜测是与resolver搭配使用？
-  // 每一个plugin均为一个函数可以传入context，context包含app，所以plugin函数中能添加监听
+  // 每一个plugin均为一个函数可以传入context
+  // 每个plugin均为app添加拦截监听
   const resolvedPlugins = [
     // rewrite and source map plugins take highest priority and should be run
     // after all other middlewares have finished
@@ -123,7 +122,7 @@ export function createServer(config: ServerConfig): Server {
   ]
   resolvedPlugins.forEach((m) => m && m(context))
 
-  // TODO Q4:listen扩展？listen函数不是要传入端口吗？看看http api
+  // 扩展server.listen写法，可把port传递给context
   const listen = server.listen.bind(server)
   server.listen = (async (port: number, ...args: any[]) => {
     if (optimizeDeps.auto !== false) {

@@ -60,6 +60,7 @@ console.log(chalk.cyan(`vite v${require('../../package.json').version}`))
   }
   const envMode = mode || m || defaultMode
   const options = await resolveOptions(envMode)
+  debugger
   if (!options.command || options.command === 'serve') {
     runServe(options)
   } else if (options.command === 'build') {
