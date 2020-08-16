@@ -15,6 +15,7 @@ export const moduleRE = /^\/@modules\//
 
 const getDebugPath = (root: string, p: string) => {
   const relative = path.relative(root, p)
+  debugger
   return relative.startsWith('..') ? p : relative
 }
 
