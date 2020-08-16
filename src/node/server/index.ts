@@ -122,7 +122,7 @@ export function createServer(config: ServerConfig): Server {
   ]
   resolvedPlugins.forEach((m) => m && m(context))
 
-  // 扩展server.listen写法，可把port传递给context
+  // 重写server.listen写法，可把port传递给context
   const listen = server.listen.bind(server)
   server.listen = (async (port: number, ...args: any[]) => {
     if (optimizeDeps.auto !== false) {
