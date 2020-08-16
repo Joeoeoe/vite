@@ -37,7 +37,7 @@ export const moduleResolvePlugin: ServerPlugin = ({ root, app, resolver }) => {
       moduleFileToIdMap.set(file, ctx.path)
       debug(`(${type}) ${id} -> ${getDebugPath(root, file)}`)
       await ctx.read(file)
-      return next() // TODO https://github.com/vitejs/vite/issues/695 有bug?
+      return next() // TODO https://github.com/vitejs/vite/issues/695 有bug? 会不会是对方npm版本的问题？
     }
 
     // special handling for vue runtime in case it's not installed
